@@ -1,7 +1,10 @@
 #ifndef FFGLGradients_H
 #define FFGLGradients_H
 
+#include "FFGLShader.h"
 #include "FFGLPluginSDK.h"
+#include <string>
+
 
 class FFGLGradients : public CFreeFrameGLPlugin
 {
@@ -40,6 +43,13 @@ protected:
 	float m_Hue2;
 	float m_Saturation;
 	float m_Brightness;
+    
+    int m_initResources;
+    
+    FFGLShader m_shader;
+    GLint m_rgb1Location;
+    GLint m_rgb2Location;
+    GLint m_widthLocation;
 	
 };
 

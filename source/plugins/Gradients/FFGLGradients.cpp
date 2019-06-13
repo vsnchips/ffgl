@@ -1,5 +1,5 @@
-#include <FFGL.h>
-#include <FFGLLib.h>
+#include "FFGL.h"
+#include "FFGLLib.h"
 #include "FFGLGradients.h"
 
 #include "utilities.h"
@@ -29,13 +29,37 @@ static CFFGLPluginInfo PluginInfo (
 	"by Edwin de Koning - www.resolume.com" // About
 );
 
+static const std::string vertexShaderCode = STRINGIFY(
+void main()
+{
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    gl_FrontColor = gl_Color;
+}
+);
+
+
+static const std::string fragmentShaderCode = STRINGIFY
+(
+uniform vec3 rgb1;
+uniform vec3 rgb2;
+uniform float width;
+void main()
+{
+    gl_FragColor  =  vec4(mix(rgb1, rgb2, gl_FragCoord.x / width), 1.0);
+}
+);
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Constructor and destructor
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FFGLGradients::FFGLGradients()
-:CFreeFrameGLPlugin()
+:CFreeFrameGLPlugin(),
+m_initResources(1),
+m_rgb1Location(-1),
+m_rgb2Location(-1),
+m_widthLocation(-1)
 {
 	// Input properties
 	SetMinInputs(0);
@@ -57,11 +81,28 @@ FFGLGradients::FFGLGradients()
 
 FFResult FFGLGradients::InitGL(const FFGLViewportStruct *vp)
 {
+    m_initResources = 0;
+    
+    //initialize gl shader
+    m_shader.Compile(vertexShaderCode,fragmentShaderCode);
+    
+    //activate our shader
+    m_shader.BindShader();
+    
+    //to assign values to parameters in the shader, we have to lookup
+    //the "location" of each value.. then call one of the glUniform* methods
+    //to assign a value
+    m_rgb1Location = m_shader.FindUniform("rgb1");
+    m_rgb2Location = m_shader.FindUniform("rgb2");
+    m_widthLocation = m_shader.FindUniform("width");
+    
+    m_shader.UnbindShader();
 	return FF_SUCCESS;
 }
 
 FFResult FFGLGradients::DeInitGL()
 {
+    m_shader.FreeGLResources();
     return FF_SUCCESS;
 }
 
@@ -84,24 +125,32 @@ FFResult FFGLGradients::ProcessOpenGL(ProcessOpenGLStruct *pGL)
 	double hue2 = (m_Hue2 == 1.0) ? 0.0 : m_Hue2;
 	HSVtoRGB( hue2, m_Saturation, m_Brightness, &rgb2[0], &rgb2[1], &rgb2[2]);
 
-
-	glShadeModel(GL_SMOOTH);
-	glBegin(GL_POLYGON);
-		glColor3f( rgb1[0], rgb1[1], rgb1[2] );
-		glVertex2f(-1.0, -1.0);	// Bottom Left Of The Texture and Quad
-
-		glColor3f( rgb2[0], rgb2[1], rgb2[2] );
-		glVertex2f( 1.0, -1.0);	// Bottom Right Of The Texture and Quad
-
-		glColor3f( rgb2[0], rgb2[1], rgb2[2] );
-		glVertex2f( 1.0,  1.0);	// Top Right Of The Texture and Quad
-
-		glColor3f( rgb1[0], rgb1[1], rgb1[2] );
-		glVertex2f(-1.0,  1.0);	// Top Left Of The Texture and Quad
-	glEnd();
-
-
-	return FF_SUCCESS;
+    //activate our shader
+    m_shader.BindShader();
+    
+    glUniform3f(m_rgb1Location,
+               rgb1[0], rgb1[1], rgb1[2] );
+    
+    glUniform3f(m_rgb2Location,
+                rgb2[0], rgb2[1], rgb2[2] );
+    
+    //get the width of the viewport
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport );
+    glUniform1f(m_widthLocation, (float)viewport[2]);
+    
+    glBegin(GL_QUADS);
+    glVertex2f(-1,-1);
+    glVertex2f(-1,1);
+    glVertex2f(1,1);
+    glVertex2f(1,-1);
+    glEnd();
+    
+    //unbind the shader
+    m_shader.UnbindShader();
+    
+    return FF_SUCCESS;
+	
 }
 
 float FFGLGradients::GetFloatParameter(unsigned int index)
