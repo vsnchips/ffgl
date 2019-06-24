@@ -2,7 +2,7 @@
 #include "FFGLLib.h"
 #include "FFGLGradients.h"
 
-#include "utilities.h"
+#include "utilities/utilities.h"
 
 #include <math.h> //floor
 
