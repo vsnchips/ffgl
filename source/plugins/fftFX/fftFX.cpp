@@ -1,6 +1,7 @@
+
 #include "FFGL.h"
 #include "FFGLLib.h"
-#include "FFGLGradients.h"
+#include "fftFX.h"
 
 #include "../../lib/ffgl/utilities/utilities.h"
 
@@ -17,9 +18,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static CFFGLPluginInfo PluginInfo (
-	FFGLGradients::CreateInstance,	// Create method
-	"VC00",								// Plugin unique ID
-	"VSNCHIPS TEST",		            // Plugin name
+	fftFX::CreateInstance,	// Create method
+	"VC01",								// Plugin unique ID
+	"VSNCHIPS FFTFX",		            // Plugin name
 	1,									// API major version number
 	000,								// API minor version number
 	1,									// Plugin major version number
@@ -54,7 +55,7 @@ void main()
 //  Constructor and destructor
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-FFGLGradients::FFGLGradients()
+fftFX::fftFX()
 :CFreeFrameGLPlugin(),
 m_initResources(1),
 m_rgb1Location(-1),
@@ -79,7 +80,7 @@ m_widthLocation(-1)
 	m_Brightness = 1.0f;
 }
 
-FFResult FFGLGradients::InitGL(const FFGLViewportStruct *vp)
+FFResult fftFX::InitGL(const FFGLViewportStruct *vp)
 {
     m_initResources = 0;
     
@@ -100,7 +101,7 @@ FFResult FFGLGradients::InitGL(const FFGLViewportStruct *vp)
 	return FF_SUCCESS;
 }
 
-FFResult FFGLGradients::DeInitGL()
+FFResult fftFX::DeInitGL()
 {
     m_shader.FreeGLResources();
     return FF_SUCCESS;
@@ -113,7 +114,7 @@ FFResult FFGLGradients::DeInitGL()
 
 
 
-FFResult FFGLGradients::ProcessOpenGL(ProcessOpenGLStruct *pGL)
+FFResult fftFX::ProcessOpenGL(ProcessOpenGLStruct *pGL)
 {
 
 	double rgb1[3];
@@ -153,7 +154,7 @@ FFResult FFGLGradients::ProcessOpenGL(ProcessOpenGLStruct *pGL)
 	
 }
 
-float FFGLGradients::GetFloatParameter(unsigned int index)
+float fftFX::GetFloatParameter(unsigned int index)
 {
 	float retValue = 0.0;
 	
@@ -178,7 +179,7 @@ float FFGLGradients::GetFloatParameter(unsigned int index)
 	return retValue;
 }
 
-FFResult FFGLGradients::SetFloatParameter(unsigned int dwIndex, float value)
+FFResult fftFX::SetFloatParameter(unsigned int dwIndex, float value)
 {
 	switch (dwIndex)
 	{
@@ -200,6 +201,7 @@ FFResult FFGLGradients::SetFloatParameter(unsigned int dwIndex, float value)
 	
 	return FF_SUCCESS;
 }
+
 
 
 
