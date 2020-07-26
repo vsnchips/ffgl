@@ -10,16 +10,16 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Source Files\lib">
-      <UniqueIdentifier>{5f7e2523-7587-4cbf-85c2-8adc4d9d3e76}</UniqueIdentifier>
+      <UniqueIdentifier>{ac4acbf5-651a-43e3-ac20-42165644575e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\lib\ffgl">
-      <UniqueIdentifier>{8d7a77f4-18cc-4fa8-8715-56b967300fee}</UniqueIdentifier>
+      <UniqueIdentifier>{4f13c4c4-b021-42ea-94d4-5383c93f8fdf}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\lib\ffgl\utilities">
-      <UniqueIdentifier>{dbc9c6e8-e64f-4a13-b405-cf4e0e56b249}</UniqueIdentifier>
+      <UniqueIdentifier>{8bb3ebb7-831b-4460-a4bb-44092316aca1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\lib\glee">
-      <UniqueIdentifier>{401dead8-e8cd-4d33-bbe4-efa9af27d481}</UniqueIdentifier>
+      <UniqueIdentifier>{c5cb21d3-43c0-432c-9761-ff55aafd36de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

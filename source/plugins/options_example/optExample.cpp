@@ -1,7 +1,7 @@
 
 #include "FFGL.h"
 #include "FFGLLib.h"
-#include "fftFX.h"
+#include "optExample.h"
 
 #include "../../lib/ffgl/utilities/utilities.h"
 
@@ -19,8 +19,8 @@
 
 static CFFGLPluginInfo PluginInfo (
 	fftFX::CreateInstance,	// Create method
-	"VC01",								// Plugin unique ID
-	"VSNCHIPS FFTFX",		            // Plugin name
+	"VC02",								// Plugin unique ID
+	"VSNCHIPS TESTBUILD",		            // Plugin name
 	1,									// API major version number
 	000,								// API minor version number
 	1,									// Plugin major version number
@@ -98,10 +98,6 @@ FFResult fftFX::InitGL(const FFGLViewportStruct *vp)
     m_widthLocation = m_shader.FindUniform("width");
     
     m_shader.UnbindShader();
-
-	//Initialize the libraries
-	//m_rtaudio = new RtAudio();
-
 	return FF_SUCCESS;
 }
 
@@ -206,82 +202,6 @@ FFResult fftFX::SetFloatParameter(unsigned int dwIndex, float value)
 	return FF_SUCCESS;
 }
 
-/*
-void fftFX::setupRtAudio() {
-	//
-	RtAudio::Api api = m_rtaudio->getCurrentApi();
-	unsigned int device_count = m_rtaudio->getDeviceCount();
 
-	//Make a list of devices 
-	m_audio_device_list = std::vector<RtAudio::DeviceInfo>(); m_audio_device_list.clear();
 
-	for (unsigned int i = 0; i < device_count; i++) {
-		//It it a microphone?
-		RtAudio::DeviceInfo info = m_rtaudio->getDeviceInfo(i);
-		if (info.inputChannels > 0)
-			m_audio_device_list.push_back(m_rtaudio->getDeviceInfo(i));
-	}
 
-	//Pick the default input device
-	m_audio_input_device_selection = m_rtaudio->getDefaultInputDevice();
-
-	//Open and start a stream on the device
-	open_rtaudio_stream(m_audio_input_device_selection, m_audio_device_list[m_audio_input_device_selection]);
-
-}
-
-void fftFX::open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo& device_info) {
-
-	RtAudio::StreamParameters outputParameters;
-	//outputParameters = NULL;
-
-	RtAudio::StreamParameters inputParameters;
-	inputParameters.deviceId = device_select;
-	//How many input channels on the device?
-	inputParameters.nChannels = device_info.inputChannels;
-	inputParameters.firstChannel = 0;
-
-	RtAudioFormat format;
-	format = RTAUDIO_FLOAT32;
-
-	unsigned int sampleRate = m_audio_samplerate;
-	unsigned int* bufferFrames = &m_audio_buffer_frame_count;
-
-	RtAudioCallback audio_callback;
-	audio_callback = &rtaudio_audio_callback;
-
-	//void* userData = NULL;
-	//RtAudio::StreamOptions* options = NULL;
-	//RtAudioErrorCallback errorCallback = NULL;
-
-	m_rtaudio->openStream(
-		NULL,//	&outputParameters,
-		&inputParameters,
-		format,
-		sampleRate,
-		bufferFrames,
-		audio_callback,
-		NULL, //userData,
-		NULL, //options,
-		NULL //errorCallback
-	);
-
-	//Start the Stream
-	m_rtaudio->startStream();
-}
-*/
-/*
-int rtaudio_audio_callback(
-	void* outputBuffer,
-	void* inputBuffer,
-	unsigned int nFrames,
-	double streamTime,
-	RtAudioStreamStatus status,
-	void* userData
-) {
-	// Get the fft lock within a timeout.
-		//Copy n frames from the inputBuffer to the outputBuffer
-	return 0;
-}
-
-*/
