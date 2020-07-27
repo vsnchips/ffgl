@@ -9,6 +9,11 @@
 #include "RtAudio.h"
 
 
+
+//Singleton RtAudio
+
+extern RtAudio the_rt_audio;
+
 class fftFX : public CFreeFrameGLPlugin
 {
 public:
@@ -55,13 +60,15 @@ protected:
 
 	// RtAudio
 	
-	RtAudio * m_rtaudio;
-	std::vector<RtAudio::DeviceInfo> m_audio_device_list;
+	RtAudio::DeviceInfo m_test_devinfo;
+	//RtAudio::DeviceInfo m_devinfo;
+	//std::vector<RtAudio::DeviceInfo> m_audio_device_list;
+
 	unsigned int m_audio_input_device_selection = 0;
 	unsigned int m_audio_samplerate = 48000;
 
 	void setupRtAudio();
-	void open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo& device_info);
+	void open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo device_info);
 
 public:
 	unsigned int m_audio_buffer_frame_count = 256;

@@ -20,6 +20,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsnchips_fftFX", "vsnchips_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsnchips_ffgl_options_example", "vsnchips_ffgl_options_example\vsnchips_ffgl_options_example.vcxproj", "{97BCE81D-D33B-43F8-B8CE-E17FDEF706DC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsnchips_libsoundio", "vsnchips_libsoundio\vsnchips_libsoundio.vcxproj", "{D5E817D4-E23E-4690-ABE4-8A9586C582A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -76,6 +78,14 @@ Global
 		{97BCE81D-D33B-43F8-B8CE-E17FDEF706DC}.Release|Win32.Build.0 = Release|Win32
 		{97BCE81D-D33B-43F8-B8CE-E17FDEF706DC}.Release|x64.ActiveCfg = Release|x64
 		{97BCE81D-D33B-43F8-B8CE-E17FDEF706DC}.Release|x64.Build.0 = Release|x64
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Debug|Win32.Build.0 = Debug|Win32
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Debug|x64.ActiveCfg = Debug|x64
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Debug|x64.Build.0 = Debug|x64
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Release|Win32.ActiveCfg = Release|Win32
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Release|Win32.Build.0 = Release|Win32
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Release|x64.ActiveCfg = Release|x64
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +97,7 @@ Global
 		{6858F0CB-DE74-406F-B56A-CC5514CAA952} = {26AC2413-23B7-4D1F-BB58-17D67106F3F1}
 		{99AEF6B8-5B9C-4509-8E97-D13D0E956D8D} = {26AC2413-23B7-4D1F-BB58-17D67106F3F1}
 		{97BCE81D-D33B-43F8-B8CE-E17FDEF706DC} = {26AC2413-23B7-4D1F-BB58-17D67106F3F1}
+		{D5E817D4-E23E-4690-ABE4-8A9586C582A4} = {26AC2413-23B7-4D1F-BB58-17D67106F3F1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {28436461-C06F-497A-8594-636977E4CDAF}

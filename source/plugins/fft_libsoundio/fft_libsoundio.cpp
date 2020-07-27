@@ -1,7 +1,7 @@
 
 #include "FFGL.h"
 #include "FFGLLib.h"
-#include "fftFX.h"
+#include "fft_libsoundio.h"
 
 #include "../../lib/ffgl/utilities/utilities.h"
 
@@ -13,14 +13,15 @@
 #define FFPARAM_Brightness  (3)
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Plugin information
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static CFFGLPluginInfo PluginInfo (
 	fftFX::CreateInstance,	// Create method
-	"VC01",								// Plugin unique ID
-	"VSNCHIPS FFTFX",		            // Plugin name
+	"VC03",								// Plugin unique ID
+	"VSN LIBSOUNDIO",		            // Plugin name
 	1,									// API major version number
 	000,								// API minor version number
 	1,									// Plugin major version number
@@ -78,8 +79,6 @@ m_widthLocation(-1)
 
 	SetParamInfo(FFPARAM_Brightness, "Brightness", FF_TYPE_STANDARD, 1.0f);
 	m_Brightness = 1.0f;
-
-	setupRtAudio();
 }
 
 FFResult fftFX::InitGL(const FFGLViewportStruct *vp)
@@ -100,11 +99,6 @@ FFResult fftFX::InitGL(const FFGLViewportStruct *vp)
     m_widthLocation = m_shader.FindUniform("width");
     
     m_shader.UnbindShader();
-
-	//Initialize the libraries
-	//m_rtaudio = new RtAudio();
-	//setupRtAudio();
-
 	return FF_SUCCESS;
 }
 
@@ -118,6 +112,8 @@ FFResult fftFX::DeInitGL()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Methods
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 FFResult fftFX::ProcessOpenGL(ProcessOpenGLStruct *pGL)
 {
@@ -208,94 +204,5 @@ FFResult fftFX::SetFloatParameter(unsigned int dwIndex, float value)
 }
 
 
-
-
-RtAudio the_rt_audio;
-
-void fftFX::setupRtAudio() {
-	//
-	RtAudio::Api api = the_rt_audio.getCurrentApi();
-	unsigned int device_count = the_rt_audio.getDeviceCount();
-
-	//Make a list of devices 
-	//m_audio_device_list = std::vector<RtAudio::DeviceInfo>(); m_audio_device_list.clear();
-
-	/*
-	for (unsigned int i = 0; i < device_count; i++) {
-		//It it a microphone?
-		RtAudio::DeviceInfo info = the_rt_audio.getDeviceInfo(i);
-		if (info.inputChannels > 0) {
-		//	m_audio_device_list.push_back(info);
-		}
-	}
-	*/
-
-
-	//Pick the default input device
-	m_audio_input_device_selection = the_rt_audio.getDefaultInputDevice();
-	m_test_devinfo = the_rt_audio.getDeviceInfo(3);
-
-	//Open and start a stream on the device
-	//open_rtaudio_stream(m_audio_input_device_selection, m_audio_device_list[m_audio_input_device_selection]);
-//	open_rtaudio_stream(m_audio_input_device_selection, test_info );
-
-}
-
-
-//void fftFX::open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo device_info) {} //dummy
-
-void fftFX::open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo device_info) {
-
-	//RtAudio::StreamParameters outputParameters;
-	//outputParameters = NULL;
-
-	RtAudio::StreamParameters inputParameters;
-	inputParameters.deviceId = device_select;
-	//How many input channels on the device?
-	inputParameters.nChannels = device_info.inputChannels;
-	inputParameters.firstChannel = 0;
-
-	RtAudioFormat format;
-	format = RTAUDIO_FLOAT32;
-
-	unsigned int sampleRate = m_audio_samplerate;
-	unsigned int* bufferFrames = &m_audio_buffer_frame_count;
-
-	RtAudioCallback audio_callback;
-	audio_callback = &rtaudio_audio_callback;
-
-	//void* userData = NULL;
-	//RtAudio::StreamOptions* options = NULL;
-	//RtAudioErrorCallback errorCallback = NULL;
-	
-	/*
-	the_rt_audio.openStream(
-		NULL,//	&outputParameters,
-		&inputParameters,
-		format,
-		sampleRate,
-		bufferFrames,
-		audio_callback,
-		NULL, //userData,
-		NULL, //options,
-		NULL //errorCallback
-	);
-*/
-	//Start the Stream
-	the_rt_audio.startStream();
-}
-
-int rtaudio_audio_callback(
-	void* outputBuffer,
-	void* inputBuffer,
-	unsigned int nFrames,
-	double streamTime,
-	RtAudioStreamStatus status,
-	void* userData
-) {
-	// Get the fft lock within a timeout.
-		//Copy n frames from the inputBuffer to the outputBuffer
-	return 0;
-}
 
 

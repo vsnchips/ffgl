@@ -19,36 +19,36 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\lib\ffgl\FFGL.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\FFGLFBO.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\FFGLPluginInfo.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\FFGLPluginInfoData.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\FFGLPluginManager.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\FFGLPluginSDK.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\FFGLShader.cpp" />
-    <ClCompile Include="..\..\source\lib\ffgl\utilities\utilities.cpp" />
-    <ClCompile Include="..\..\source\lib\glee\GLee.c" />
-    <ClCompile Include="..\..\source\plugins\fftFX\fftFX.cpp" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGL.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLFBO.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLLib.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginInfo.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginManager.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginManager_inl.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginSDK.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLShader.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\FreeFrame.h" />
+    <ClInclude Include="..\..\..\source\lib\ffgl\utilities\utilities.h" />
+    <ClInclude Include="..\..\..\source\lib\glee\GLee.h" />
+    <ClInclude Include="..\..\..\source\plugins\fft_libsoundio\fft_libsoundio.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\lib\ffgl\FFGL.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLFBO.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLLib.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLPluginInfo.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLPluginManager.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLPluginManager_inl.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLPluginSDK.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FFGLShader.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\FreeFrame.h" />
-    <ClInclude Include="..\..\source\lib\ffgl\utilities\utilities.h" />
-    <ClInclude Include="..\..\source\lib\glee\GLee.h" />
-    <ClInclude Include="..\..\source\plugins\fftFX\fftFX.h" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGL.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLFBO.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginInfo.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginInfoData.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginManager.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginSDK.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLShader.cpp" />
+    <ClCompile Include="..\..\..\source\lib\ffgl\utilities\utilities.cpp" />
+    <ClCompile Include="..\..\..\source\lib\glee\GLee.c" />
+    <ClCompile Include="..\..\..\source\plugins\fft_libsoundio\fft_libsoundio.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{99aef6b8-5b9c-4509-8e97-d13d0e956d8d}</ProjectGuid>
-    <RootNamespace>vsnchipsfftFX</RootNamespace>
+    <ProjectGuid>{d5e817d4-e23e-4690-abe4-8a9586c582a4}</ProjectGuid>
+    <RootNamespace>vsnchips_libsoundio</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -104,13 +104,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\binaries\x64\Release</OutDir>
-    <IntDir>..\..\binaries\x64\Release</IntDir>
+    <OutDir>..\..\..\binaries\x64\Release</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\binaries\x64\Release</OutDir>
-    <IntDir>..\..\binaries\x64\Release</IntDir>
+    <OutDir>..\..\..\binaries\x64\Release</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -155,16 +153,16 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\source\lib\ffgl\;.\rtaudio;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\source\lib\ffgl\;.\libsoundio\</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>rtaudio.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>soundio.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\source\common\opengl\lib</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>FFGLPlugins.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\FFGLPlugins.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -178,7 +176,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\source\lib\ffgl\;.\rtaudio;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\source\lib\ffgl\;.\libsoundio\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -186,9 +184,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>rtaudio.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>soundio.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\source\common\opengl\lib</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>FFGLPlugins.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\FFGLPlugins.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
