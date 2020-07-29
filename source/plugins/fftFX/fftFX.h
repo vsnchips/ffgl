@@ -60,7 +60,7 @@ protected:
 
 	// RtAudio
 	
-	RtAudio::DeviceInfo m_test_devinfo;
+	RtAudio::DeviceInfo * m_test_devinfo;
 	//RtAudio::DeviceInfo m_devinfo;
 	//std::vector<RtAudio::DeviceInfo> m_audio_device_list;
 
@@ -72,7 +72,6 @@ protected:
 
 public:
 	unsigned int m_audio_buffer_frame_count = 256;
-
 
 };
 

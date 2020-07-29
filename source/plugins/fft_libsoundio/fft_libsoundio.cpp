@@ -13,10 +13,28 @@
 #define FFPARAM_Brightness  (3)
 
 
+int fftFX::init_soundio() {
+
+	int err;
+	m_soundio = soundio_create();
+	if (!m_soundio) {
+		fprintf(stderr, "out of memory\n");
+		return 1;
+	}
+	
+	if ((err = soundio_connect(m_soundio))) {
+		fprintf(stderr, "error connecting: %s\n", soundio_strerror(err));
+		return 1;
+	}
+
+
+	return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Plugin information
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 static CFFGLPluginInfo PluginInfo (
 	fftFX::CreateInstance,	// Create method
@@ -79,6 +97,9 @@ m_widthLocation(-1)
 
 	SetParamInfo(FFPARAM_Brightness, "Brightness", FF_TYPE_STANDARD, 1.0f);
 	m_Brightness = 1.0f;
+
+	//SoundIO
+	init_soundio();
 }
 
 FFResult fftFX::InitGL(const FFGLViewportStruct *vp)

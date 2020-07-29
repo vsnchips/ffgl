@@ -233,7 +233,7 @@ void fftFX::setupRtAudio() {
 
 	//Pick the default input device
 	m_audio_input_device_selection = the_rt_audio.getDefaultInputDevice();
-	m_test_devinfo = the_rt_audio.getDeviceInfo(3);
+	m_test_devinfo = &the_rt_audio.getDeviceInfo(3);
 
 	//Open and start a stream on the device
 	//open_rtaudio_stream(m_audio_input_device_selection, m_audio_device_list[m_audio_input_device_selection]);

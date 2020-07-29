@@ -7,6 +7,7 @@
 #include <string>
 
 #include <soundio/soundio.h>
+//#include <soundio_private.h>
 
 class fftFX : public CFreeFrameGLPlugin
 {
@@ -41,6 +42,8 @@ public:
 
 protected:	
 
+	struct SoundIo* m_soundio;
+
 	float m_Hue1;
 	float m_Hue2;
 	float m_Saturation;
@@ -53,6 +56,7 @@ protected:
     GLint m_rgb2Location;
     GLint m_widthLocation;
 	
+	int fftFX::init_soundio();
 };
 
 
