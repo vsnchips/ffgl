@@ -64,6 +64,9 @@ FFResult aubioFX::InitGL(const FFGLViewportStruct *vp)
 {
     m_initResources = 0;
     
+	//AUDIO BUFFER MGMT
+	latestSample = 0;
+
 	//AUDIO TEXTURE
 	glGenTextures(1, &mgl_spectrum_texture);
 	glBindTexture(GL_TEXTURE_1D,mgl_spectrum_texture);
@@ -119,12 +122,33 @@ void aubioFX::fx_update(){
 	  // Lock fft array
 	  // Send array to shader uniforms
 	*/
+	
+	//Raw audio
+	float rbSamps[4096];
+	jack_ringbuffer_peek(m_fft_rb,(char*)rbSamps,sizeof(jack_default_audio_sample_t)*4096);
 
-	for (int j = 0; j < 4096; j++) {
+	bufferLock.lock();
+	for(int j = 0; j < 4096; j++) {
 		for (int i = 0; i < 4; i++) {
 			audioTextureData[j][i] = float(j)/4096.0f;// random(0, 1);
+			audioTextureData[j][i] = 0;
 		}
+		//Distribute into channels here
+		//Raws to Red
+		
+		//audioTextureData[j][0] = rbSamps[j];
+		//audioTextureData[j][1] = rbSamps[j]/1000.0f;
+		audioTextureData[j][1] = aubio_buffer->data[j];
+		audioTextureData[j][0] = aubio_buffer->data[(j+latestSample)%4096];
+		audioTextureData[j][2] = rbSamps[j];
+		audioTextureData[j][3] = 1.0;// rbSamps[j];
+		//FFT Magnitudes to Green
+
+		//FFT Phases to Blue
+
+		//TSS magnitudes to Alpha
 	}
+	bufferLock.unlock();
 	
 }
 
@@ -251,7 +275,6 @@ fvec_t* aubioFX_global_aubio_sink;
 
 int jack_frames_process (jack_nframes_t nframes, void *arg)
 {
-
 	
 	aubioFX* plugInstance = (aubioFX*)arg;
 
@@ -260,15 +283,37 @@ int jack_frames_process (jack_nframes_t nframes, void *arg)
 	in = (jack_default_audio_sample_t * ) jack_port_get_buffer (plugInstance->m_jack_input_port, nframes);
 
 	//TODO Validate This
-	void* dest = (plugInstance->aubio_buffer)->data;
+	void* start_dest = ((plugInstance->aubio_buffer)->data);
+	uint_t latestCharBin = plugInstance->latestSample * 4;
 
-	memcpy (dest, in,
-		sizeof(jack_default_audio_sample_t) * nframes);
+	void* first_dest = (void*)((uint_t)start_dest + latestCharBin);
 
-	jack_ringbuffer_write(plugInstance->m_fft_rb, (char*)in, sizeof(jack_default_audio_sample_t) * nframes);
+	uint_t firstlength = 0, wraplength = 0;
 
+	uint_t buff_charsize = 4096 * 4;
+	firstlength = uint_t(4*min((int)nframes, buff_charsize - latestCharBin));
+	wraplength = uint_t(max(0, (int)latestCharBin + 4*(int)nframes - (int)buff_charsize));
 	
+	plugInstance->bufferLock.lock();
+	
+		//First snip
+		memcpy ((void*)first_dest, in,	sizeof(jack_default_audio_sample_t) * firstlength);
+		//Wrapping snip
+		if (wraplength > 0) {
+			//memcpy((void*)start_dest, (void*)((uint_t)in + firstlength), sizeof(jack_default_audio_sample_t) * wraplength);
+			memcpy((void*)start_dest, (void*)((uint_t)in ), sizeof(jack_default_audio_sample_t) * wraplength);
+		}
+		
+		plugInstance->latestSample += nframes;
+		plugInstance->latestSample = (plugInstance->latestSample)%4096;
 
+	plugInstance->bufferLock.unlock();
+
+	jack_ringbuffer_write(plugInstance->m_fft_rb, (char *)(plugInstance->aubio_buffer)->data, sizeof(jack_default_audio_sample_t) * nframes);
+	jack_ringbuffer_write(plugInstance->m_fft_rb, (char *)in, sizeof(jack_default_audio_sample_t) * nframes);
+	jack_ringbuffer_write_advance(plugInstance->m_fft_rb, sizeof(jack_default_audio_sample_t) * nframes);
+	jack_ringbuffer_read_advance(plugInstance->m_fft_rb, sizeof(jack_default_audio_sample_t) * nframes);
+	
 	return 0;      
 }
 
@@ -276,7 +321,8 @@ void aubioFX::make_audio_stuff(){
 	
 	printf("Opening Jack Client");
 
-	m_fft_rb = jack_ringbuffer_create(4096);
+	m_fft_rb = jack_ringbuffer_create(4096*sizeof(jack_default_audio_sample_t));
+	jack_ringbuffer_reset(m_fft_rb);
 
 	aubio_buffer = new_fvec(4096);
 	m_aubio_fft = new_aubio_fft(4096);
@@ -338,6 +384,8 @@ void jack_shutdown(void* arg) {
 	aubioFX* plugInstance = (aubioFX*)arg;
 	jack_deactivate(plugInstance->m_jack_client);
 	jack_client_close(plugInstance->m_jack_client);
+
+	jack_ringbuffer_free(plugInstance->m_fft_rb);
 }
 
 void aubioFX::start_audio_stuff(){
@@ -352,9 +400,9 @@ void aubioFX::start_audio_stuff(){
 		return;
 	}
 
-	/*
+	
 	//connect ports
-	ports = jack_get_ports(m_jack_client, NULL,NULL, JackPortIsInput);
+	ports = jack_get_ports(m_jack_client, NULL,NULL, JackPortIsOutput);
 	if (ports == NULL) {
 		fprintf(stderr,"no physical capture ports\n");
 	}
@@ -363,8 +411,8 @@ void aubioFX::start_audio_stuff(){
 	if (jack_connect(m_jack_client, ports[0], jack_port_name(m_jack_input_port))){
 		fprintf(stderr, "cannot connect input ports\n");
 	}
-	free(ports);
-	*/
+	//free(ports);
+	
 
 }
 

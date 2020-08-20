@@ -8,14 +8,12 @@
 
 #define _STDINT_H
 
-#ifdef __cplusplus
-//extern "C" {
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
-//}
-#endif
 
 #include <aubio.h>
+
+#include <mutex>
 
 #define BUFFERSIZE 1024
 
@@ -70,6 +68,9 @@ public:
 
 	//aubioFX
 
+	std::mutex bufferLock;
+	unsigned int latestSample = 0;
+
 	void make_audio_stuff();
 	void start_audio_stuff();
 	void close_audio_stuff();
@@ -78,6 +79,7 @@ public:
 	jack_client_t* m_jack_client;
 
 	jack_ringbuffer_t* m_fft_rb;
+
 	fvec_t * aubio_buffer;
 
 	aubio_fft_t * m_aubio_fft;
@@ -92,9 +94,13 @@ public:
 
 
 	//Level 0 TODO:
-	// Update creates audio texturea - testing
-	// Method to upload fft array to texture - testing
-	// Write basic shader
+	// Update creates audio texturea - developing
+	// Method to upload fft array to texture - done
+	// Write basic shader - developing
+
+	//Level 1 TODO:
+	// Process audio and send to texture
+	// Edit shader to draw a bar chart
 
 	//GUI:
 	// Add switch for quantisation

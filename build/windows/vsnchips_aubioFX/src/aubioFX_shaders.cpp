@@ -28,8 +28,9 @@ uniform vec2 iResolution;
 void main()
 {
     vec4 audioCol = texture(audioTexture, gl_FragCoord.x / 1920);
-    audioCol.b = 0;
-    gl_FragColor  = vec4(rgb2,0.0)+audioCol;
+   // audioCol.b = 0;
+    //gl_FragColor  = audioCol/2 + 0.5;
+    gl_FragColor  = audioCol;
 }
 );
 
