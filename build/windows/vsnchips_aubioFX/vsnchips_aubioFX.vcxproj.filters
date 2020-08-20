@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\lib">
+      <UniqueIdentifier>{1b33e578-efbf-4d77-b45d-496916d5c7b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lib\ffgl">
+      <UniqueIdentifier>{d592ffea-4df5-41e3-b0cc-f3b6e10767de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lib\ffgl\utilities">
+      <UniqueIdentifier>{4b6e287d-8b06-4459-85a1-b719453d19f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lib\glee">
+      <UniqueIdentifier>{ce954e28-d4fe-4581-99f0-72e5d83c2886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src">
+      <UniqueIdentifier>{86afc30f-6dec-4a4f-9801-7f99a1c95db5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGL.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLFBO.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLLib.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginInfo.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginManager.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginManager_inl.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLPluginSDK.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FFGLShader.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\FreeFrame.h">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\ffgl\utilities\utilities.h">
+      <Filter>Source Files\lib\ffgl\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\lib\glee\GLee.h">
+      <Filter>Source Files\lib\glee</Filter>
+    </ClInclude>
+    <ClInclude Include="src\aubioFX.h">
+      <Filter>Source Files\src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGL.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLFBO.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginInfo.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginInfoData.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginManager.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLPluginSDK.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\FFGLShader.cpp">
+      <Filter>Source Files\lib\ffgl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\ffgl\utilities\utilities.cpp">
+      <Filter>Source Files\lib\ffgl\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib\glee\GLee.c">
+      <Filter>Source Files\lib\glee</Filter>
+    </ClCompile>
+    <ClCompile Include="src\aubioFX.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

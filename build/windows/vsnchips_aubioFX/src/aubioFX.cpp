@@ -1,7 +1,7 @@
 
 #include "FFGL.h"
 #include "FFGLLib.h"
-#include "fftFX.h"
+#include "aubioFX.h"
 
 #include "../../lib/ffgl/utilities/utilities.h"
 
@@ -12,15 +12,14 @@
 #define FFPARAM_Saturation  (2)
 #define FFPARAM_Brightness  (3)
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Plugin information
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static CFFGLPluginInfo PluginInfo (
-	fftFX::CreateInstance,	// Create method
-	"VC01",								// Plugin unique ID
-	"VSNCHIPS FFTFX",		            // Plugin name
+	aubioFX::CreateInstance,	// Create method
+	"VC04",								// Plugin unique ID
+	"_VSNCHIPS_AUBIOFX",		            // Plugin name
 	1,									// API major version number
 	000,								// API minor version number
 	1,									// Plugin major version number
@@ -50,12 +49,11 @@ void main()
 }
 );
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Constructor and destructor
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-fftFX::fftFX()
+aubioFX::aubioFX()
 :CFreeFrameGLPlugin(),
 m_initResources(1),
 m_rgb1Location(-1),
@@ -79,10 +77,9 @@ m_widthLocation(-1)
 	SetParamInfo(FFPARAM_Brightness, "Brightness", FF_TYPE_STANDARD, 1.0f);
 	m_Brightness = 1.0f;
 
-	setupRtAudio();
 }
 
-FFResult fftFX::InitGL(const FFGLViewportStruct *vp)
+FFResult aubioFX::InitGL(const FFGLViewportStruct *vp)
 {
     m_initResources = 0;
     
@@ -104,12 +101,116 @@ FFResult fftFX::InitGL(const FFGLViewportStruct *vp)
 	//Initialize the libraries
 	//m_rtaudio = new RtAudio();
 	//setupRtAudio();
+	make_audio_stuff();
 
 	return FF_SUCCESS;
 }
 
-FFResult fftFX::DeInitGL()
+void aubioFX::make_audio_stuff(){
+	
+	printf("Opening Jack Client");
+
+	m_fft_rb = jack_ringbuffer_create(4096);
+
+	aubio_buffer = new_fvec(4096);
+	m_aubio_fft = new_aubio_fft(4096);
+	m_aubio_tss = new_aubio_tss(4096,256);
+
+	const char* client_name = "Vsnchips_AubioFX";
+	jack_options_t options = JackNullOption;
+	jack_status_t status;
+	const char * server_name = NULL;
+
+	//Connect to jack server and make a client
+	m_jack_client = jack_client_open(client_name, options, &status, server_name);
+	if (m_jack_client == NULL) {
+
+		fprintf(stderr, "jack_client_open() failed, status = 0x%2.0x\n", status);
+		fprintf(stdout, "jack_client_open() failed, status = 0x%2.0x\n", status);
+		if (status & JackServerFailed) {
+			fprintf(stderr, "Unable to connect to JACK server\n");
+			fprintf(stdout, "Unable to connect to JACK server\n");
+		}
+		return;
+	}
+	// Check Jack connected
+	if (status & JackServerStarted) {
+		fprintf(stderr, "JACK server started\n");
+	}
+	if (status & JackNameNotUnique) {
+		client_name = jack_get_client_name(m_jack_client);
+		fprintf(stderr, "unique name `%s' assigned\n", client_name);
+		fprintf(stdout, "unique name `%s' assigned\n", client_name);
+	}
+
+	//Set process callback
+	jack_set_process_callback(m_jack_client, jack_frames_process, (void*)this );
+
+	printf("engine sample rate: %d" "\n",
+		jack_get_sample_rate(m_jack_client));
+
+	//Shutdown callback
+	jack_on_shutdown(m_jack_client, jack_shutdown, (void *)this );
+
+	//Make and register the ports
+	m_jack_input_port = jack_port_register(m_jack_client, "input",
+		JACK_DEFAULT_AUDIO_TYPE,
+		JackPortIsInput | JackPortIsTerminal,
+		0);
+
+	if (m_jack_input_port == NULL){
+		fprintf(stderr, "no JACK ports available\n");
+	}
+
+	//Start the client and connect the ports
+	start_audio_stuff();
+
+}
+
+void jack_shutdown(void* arg) {
+	
+	aubioFX* plugInstance = (aubioFX*)arg;
+	jack_deactivate(plugInstance->m_jack_client);
+	jack_client_close(plugInstance->m_jack_client);
+}
+
+void aubioFX::start_audio_stuff(){
+
+	const char** ports;
+
+	 
+	//Start running the jack client
+	if (jack_activate (m_jack_client)) {
+		fprintf (stderr, "cannot activate client");
+	//	exit (1);
+		return;
+	}
+
+	/*
+	//connect ports
+	ports = jack_get_ports(m_jack_client, NULL,NULL, JackPortIsInput);
+	if (ports == NULL) {
+		fprintf(stderr,"no physical capture ports\n");
+	}
+	
+	//TODO: Knit Arg
+	if (jack_connect(m_jack_client, ports[0], jack_port_name(m_jack_input_port))){
+		fprintf(stderr, "cannot connect input ports\n");
+	}
+	free(ports);
+	*/
+
+}
+
+void  aubioFX::close_audio_stuff(){
+	jack_shutdown(this);
+}
+
+FFResult aubioFX::DeInitGL()
 {
+	//Close audio stuff
+	close_audio_stuff();
+
     m_shader.FreeGLResources();
     return FF_SUCCESS;
 }
@@ -119,9 +220,27 @@ FFResult fftFX::DeInitGL()
 //  Methods
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-FFResult fftFX::ProcessOpenGL(ProcessOpenGLStruct *pGL)
+
+void aubioFX::fx_update(){
+	// TODO: Update uniforms
+
+	/*
+	  // Lock fft array
+	  // Send array to shader uniforms
+	*/
+
+}
+
+FFResult aubioFX::ProcessOpenGL(ProcessOpenGLStruct* pGL)
 {
 
+	fx_update();
+
+	return fx_render(pGL);
+}
+
+FFResult aubioFX::fx_render(ProcessOpenGLStruct *pGL)
+{
 	double rgb1[3];
     //we need to make sure the hue doesn't reach 1.0f, otherwise the result will be pink and not red how it should be
 	double hue1 = (m_Hue1 == 1.0) ? 0.0 : m_Hue1;
@@ -159,7 +278,7 @@ FFResult fftFX::ProcessOpenGL(ProcessOpenGLStruct *pGL)
 	
 }
 
-float fftFX::GetFloatParameter(unsigned int index)
+float aubioFX::GetFloatParameter(unsigned int index)
 {
 	float retValue = 0.0;
 	
@@ -184,7 +303,7 @@ float fftFX::GetFloatParameter(unsigned int index)
 	return retValue;
 }
 
-FFResult fftFX::SetFloatParameter(unsigned int dwIndex, float value)
+FFResult aubioFX::SetFloatParameter(unsigned int dwIndex, float value)
 {
 	switch (dwIndex)
 	{
@@ -207,98 +326,35 @@ FFResult fftFX::SetFloatParameter(unsigned int dwIndex, float value)
 	return FF_SUCCESS;
 }
 
+//Jack Calback
 
+jack_port_t *aubioFX_global_input_port;
+jack_port_t *aubioFX_global_output_port;
+fvec_t* aubioFX_global_aubio_sink;
 
+#ifdef __cplusplus
+//extern "C" {
+int jack_frames_process (jack_nframes_t nframes, void *arg)
+{
 
-RtAudio the_rt_audio;
-
-void fftFX::setupRtAudio() {
-	//
-	RtAudio::Api api = the_rt_audio.getCurrentApi();
-	unsigned int device_count = the_rt_audio.getDeviceCount();
-
-	//Make a list of devices 
-	//m_audio_device_list = std::vector<RtAudio::DeviceInfo>(); m_audio_device_list.clear();
-
-	/*
-	for (unsigned int i = 0; i < device_count; i++) {
-		//It it a microphone?
-		RtAudio::DeviceInfo info = the_rt_audio.getDeviceInfo(i);
-		if (info.inputChannels > 0) {
-		//	m_audio_device_list.push_back(info);
-		}
-	}
-	*/
-
-
-	//Pick the default input device
-	m_audio_input_device_selection = the_rt_audio.getDefaultInputDevice();
-
-	//Open and start a stream on the device
-	//open_rtaudio_stream(m_audio_input_device_selection, m_audio_device_list[m_audio_input_device_selection]);
-	m_test_devinfo = &the_rt_audio.getDeviceInfo(m_audio_input_device_selection);
-	open_rtaudio_stream(m_audio_input_device_selection, *m_test_devinfo );
-
-	//_test_devinfo = &the_rt_audio.getDeviceInfo(3);
-	//open_rtaudio_stream(3, *m_test_devinfo );
-
-}
-
-
-//void fftFX::open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo device_info) {} //dummy
-
-void fftFX::open_rtaudio_stream(unsigned int device_select, RtAudio::DeviceInfo device_info) {
-
-	//RtAudio::StreamParameters outputParameters;
-	//outputParameters = NULL;
-
-	RtAudio::StreamParameters inputParameters;
-	inputParameters.deviceId = device_select;
-	//How many input channels on the device?
-	inputParameters.nChannels = device_info.inputChannels;
-	inputParameters.firstChannel = 0;
-
-	RtAudioFormat format;
-	format = RTAUDIO_FLOAT32;
-
-	unsigned int sampleRate = m_audio_samplerate;
-	unsigned int* bufferFrames = &m_audio_buffer_frame_count;
-
-	RtAudioCallback audio_callback;
-	audio_callback = &rtaudio_audio_callback;
-
-	//void* userData = NULL;
-	//RtAudio::StreamOptions* options = NULL;
-	//RtAudioErrorCallback errorCallback = NULL;
 	
+	aubioFX* plugInstance = (aubioFX*)arg;
+
+	jack_default_audio_sample_t *in, *out;
 	
-	the_rt_audio.openStream(
-		NULL,//	&outputParameters,
-		&inputParameters,
-		format,
-		sampleRate,
-		bufferFrames,
-		audio_callback,
-		NULL, //userData,
-		NULL, //options,
-		NULL //errorCallback
-	);
+	in = (jack_default_audio_sample_t * ) jack_port_get_buffer (plugInstance->m_jack_input_port, nframes);
 
-	//Start the Stream
-	the_rt_audio.startStream();
+	//TODO Validate This
+	void* dest = (plugInstance->aubio_buffer)->data;
+
+	memcpy (dest, in,
+		sizeof(jack_default_audio_sample_t) * nframes);
+
+	jack_ringbuffer_write(plugInstance->m_fft_rb, (char*)in, sizeof(jack_default_audio_sample_t) * nframes);
+
+	
+
+	return 0;      
 }
-
-int rtaudio_audio_callback(
-	void* outputBuffer,
-	void* inputBuffer,
-	unsigned int nFrames,
-	double streamTime,
-	RtAudioStreamStatus status,
-	void* userData
-) {
-	// Get the fft lock within a timeout.
-		//Copy n frames from the inputBuffer to the outputBuffer
-	return 0;
-}
-
-
+//}
+#endif
