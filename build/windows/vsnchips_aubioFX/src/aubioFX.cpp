@@ -124,13 +124,13 @@ void aubioFX::fx_update(){
 	*/
 	
 	//Raw audio
-	float rbSamps[4096];
-	jack_ringbuffer_peek(m_fft_rb,(char*)rbSamps,sizeof(jack_default_audio_sample_t)*4096);
+	float rbSamps[AUDIOTEXTURESIZE];
+	jack_ringbuffer_peek(m_fft_rb,(char*)rbSamps,sizeof(float)*AUDIOTEXTURESIZE);
 
 	bufferLock.lock();
-	for(int j = 0; j < 4096; j++) {
+	for(int j = 0; j < AUDIOTEXTURESIZE; j++) {
 		for (int i = 0; i < 4; i++) {
-			audioTextureData[j][i] = float(j)/4096.0f;// random(0, 1);
+			audioTextureData[j][i] = float(j)/(float)AUDIOTEXTURESIZE;// random(0, 1);
 			audioTextureData[j][i] = 0;
 		}
 		//Distribute into channels here
@@ -138,9 +138,9 @@ void aubioFX::fx_update(){
 		
 		//audioTextureData[j][0] = rbSamps[j];
 		//audioTextureData[j][1] = rbSamps[j]/1000.0f;
-		audioTextureData[j][1] = aubio_buffer->data[j];
-		audioTextureData[j][0] = aubio_buffer->data[(j+latestSample)%4096];
-		audioTextureData[j][2] = rbSamps[j];
+		audioTextureData[j][0] = aubio_buffer->data[(j+latestSample)%AUDIOTEXTURESIZE];
+		audioTextureData[j][1] = rbSamps[j];
+		audioTextureData[j][2] = aubio_buffer->data[j];
 		audioTextureData[j][3] = 1.0;// rbSamps[j];
 		//FFT Magnitudes to Green
 
@@ -168,7 +168,7 @@ FFResult aubioFX::fx_render(ProcessOpenGLStruct *pGL)
 	// Texture, uniform uploads
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_1D, mgl_spectrum_texture);
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 4096, 0, GL_RGBA, GL_FLOAT, audioTextureData);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, AUDIOTEXTURESIZE, 0, GL_RGBA, GL_FLOAT, audioTextureData);
 
 	// GUI Updates
 
@@ -281,7 +281,12 @@ int jack_frames_process (jack_nframes_t nframes, void *arg)
 	jack_default_audio_sample_t *in, *out;
 	
 	in = (jack_default_audio_sample_t * ) jack_port_get_buffer (plugInstance->m_jack_input_port, nframes);
-
+	
+	//jack_ringbuffer_write(plugInstance->m_fft_rb, (char *)(plugInstance->aubio_buffer)->data, sizeof(jack_default_audio_sample_t) * nframes);
+	jack_ringbuffer_write(plugInstance->m_fft_rb, (char *)in, sizeof(jack_default_audio_sample_t) * nframes);
+	jack_ringbuffer_write_advance(plugInstance->m_fft_rb, sizeof(jack_default_audio_sample_t) * nframes);
+	jack_ringbuffer_read_advance(plugInstance->m_fft_rb, sizeof(jack_default_audio_sample_t) * nframes);
+	
 	//TODO Validate This
 	void* start_dest = ((plugInstance->aubio_buffer)->data);
 	uint_t latestCharBin = plugInstance->latestSample * 4;
@@ -290,7 +295,7 @@ int jack_frames_process (jack_nframes_t nframes, void *arg)
 
 	uint_t firstlength = 0, wraplength = 0;
 
-	uint_t buff_charsize = 4096 * 4;
+	uint_t buff_charsize = AUDIOTEXTURESIZE * 4;
 	firstlength = uint_t(4*min((int)nframes, buff_charsize - latestCharBin));
 	wraplength = uint_t(max(0, (int)latestCharBin + 4*(int)nframes - (int)buff_charsize));
 	
@@ -305,14 +310,10 @@ int jack_frames_process (jack_nframes_t nframes, void *arg)
 		}
 		
 		plugInstance->latestSample += nframes;
-		plugInstance->latestSample = (plugInstance->latestSample)%4096;
+		plugInstance->latestSample = (plugInstance->latestSample)%AUDIOTEXTURESIZE;
 
 	plugInstance->bufferLock.unlock();
 
-	jack_ringbuffer_write(plugInstance->m_fft_rb, (char *)(plugInstance->aubio_buffer)->data, sizeof(jack_default_audio_sample_t) * nframes);
-	jack_ringbuffer_write(plugInstance->m_fft_rb, (char *)in, sizeof(jack_default_audio_sample_t) * nframes);
-	jack_ringbuffer_write_advance(plugInstance->m_fft_rb, sizeof(jack_default_audio_sample_t) * nframes);
-	jack_ringbuffer_read_advance(plugInstance->m_fft_rb, sizeof(jack_default_audio_sample_t) * nframes);
 	
 	return 0;      
 }
@@ -321,12 +322,12 @@ void aubioFX::make_audio_stuff(){
 	
 	printf("Opening Jack Client");
 
-	m_fft_rb = jack_ringbuffer_create(4096*sizeof(jack_default_audio_sample_t));
+	m_fft_rb = jack_ringbuffer_create(AUDIOTEXTURESIZE*sizeof(jack_default_audio_sample_t));
 	jack_ringbuffer_reset(m_fft_rb);
 
-	aubio_buffer = new_fvec(4096);
-	m_aubio_fft = new_aubio_fft(4096);
-	m_aubio_tss = new_aubio_tss(4096,256);
+	aubio_buffer = new_fvec(AUDIOTEXTURESIZE);
+	m_aubio_fft = new_aubio_fft(AUDIOTEXTURESIZE);
+	m_aubio_tss = new_aubio_tss(AUDIOTEXTURESIZE,256);
 
 	const char* client_name = "Vsnchips_AubioFX";
 	jack_options_t options = JackNullOption;

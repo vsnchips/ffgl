@@ -15,7 +15,8 @@
 
 #include <mutex>
 
-#define BUFFERSIZE 1024
+#define BUFFERSIZE 256
+#define AUDIOTEXTURESIZE 512
 
 
 extern const std::string vertexShaderCode;
