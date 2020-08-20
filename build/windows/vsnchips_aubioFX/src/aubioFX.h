@@ -19,6 +19,11 @@
 
 #define BUFFERSIZE 1024
 
+
+extern const std::string vertexShaderCode;
+extern const std::string fragmentShaderCode;
+
+
 class aubioFX : public CFreeFrameGLPlugin{
 public:
 	aubioFX();
@@ -56,9 +61,12 @@ public:
 	int m_initResources;
 
 	FFGLShader m_shader;
+//uniform locations
 	GLint m_rgb1Location;
 	GLint m_rgb2Location;
 	GLint m_widthLocation;
+	GLint m_spectrum_texture_uniform_location;
+	GLuint mgl_spectrum_texture;
 
 	//aubioFX
 
@@ -80,6 +88,20 @@ public:
 	cvec_t* m_tss_input;
 	cvec_t m_tss_output;
 
+	float audioTextureData [4096][4];
+
+
+	//Level 0 TODO:
+	// Update creates audio texturea - testing
+	// Method to upload fft array to texture - testing
+	// Write basic shader
+
+	//GUI:
+	// Add switch for quantisation
+	// Channel matrix
+
+	// Level 2
+	// TODO: Method to load shader from a file [asynchrously]
 
 };
 

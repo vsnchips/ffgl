@@ -43,6 +43,7 @@
     <ClCompile Include="..\..\..\source\lib\ffgl\utilities\utilities.cpp" />
     <ClCompile Include="..\..\..\source\lib\glee\GLee.c" />
     <ClCompile Include="src\aubioFX.cpp" />
+    <ClCompile Include="src\aubioFX_shaders.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

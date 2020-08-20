@@ -12,6 +12,7 @@
 #define FFPARAM_Saturation  (2)
 #define FFPARAM_Brightness  (3)
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Plugin information
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +20,7 @@
 static CFFGLPluginInfo PluginInfo (
 	aubioFX::CreateInstance,	// Create method
 	"VC04",								// Plugin unique ID
-	"_VSNCHIPS_AUBIOFX",		            // Plugin name
+	"_VSNCHIPS_AUBIO",		            // Plugin name
 	1,									// API major version number
 	000,								// API minor version number
 	1,									// Plugin major version number
@@ -27,26 +28,6 @@ static CFFGLPluginInfo PluginInfo (
 	FF_SOURCE,							// Plugin type
 	"Sample FFGL Gradients plugin",		// Plugin description
 	"by Edwin de Koning - www.resolume.com" // About
-);
-
-static const std::string vertexShaderCode = STRINGIFY(
-void main()
-{
-    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-    gl_FrontColor = gl_Color;
-}
-);
-
-
-static const std::string fragmentShaderCode = STRINGIFY
-(
-uniform vec3 rgb1;
-uniform vec3 rgb2;
-uniform float width;
-void main()
-{
-    gl_FragColor  =  vec4(mix(rgb1, rgb2, gl_FragCoord.x / width), 1.0);
-}
 );
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +64,14 @@ FFResult aubioFX::InitGL(const FFGLViewportStruct *vp)
 {
     m_initResources = 0;
     
+	//AUDIO TEXTURE
+	glGenTextures(1, &mgl_spectrum_texture);
+	glBindTexture(GL_TEXTURE_1D,mgl_spectrum_texture);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//TODO: afford gui options here
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     //initialize gl shader
     m_shader.Compile(vertexShaderCode,fragmentShaderCode);
     
@@ -95,7 +84,8 @@ FFResult aubioFX::InitGL(const FFGLViewportStruct *vp)
     m_rgb1Location = m_shader.FindUniform("rgb1");
     m_rgb2Location = m_shader.FindUniform("rgb2");
     m_widthLocation = m_shader.FindUniform("width");
-    
+	m_spectrum_texture_uniform_location = m_shader.FindUniform("audioTexture");
+
     m_shader.UnbindShader();
 
 	//Initialize the libraries
@@ -104,6 +94,182 @@ FFResult aubioFX::InitGL(const FFGLViewportStruct *vp)
 	make_audio_stuff();
 
 	return FF_SUCCESS;
+}
+
+FFResult aubioFX::DeInitGL()
+{
+	//Close audio stuff
+	close_audio_stuff();
+
+	glDeleteTextures(1, (const GLuint*)&mgl_spectrum_texture);
+
+    m_shader.FreeGLResources();
+    return FF_SUCCESS;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Methods
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void aubioFX::fx_update(){
+
+	/*
+	  // Lock fft array
+	  // Send array to shader uniforms
+	*/
+
+	for (int j = 0; j < 4096; j++) {
+		for (int i = 0; i < 4; i++) {
+			audioTextureData[j][i] = float(j)/4096.0f;// random(0, 1);
+		}
+	}
+	
+}
+
+FFResult aubioFX::ProcessOpenGL(ProcessOpenGLStruct* pGL)
+{
+
+	fx_update();
+
+	return fx_render(pGL);
+}
+
+FFResult aubioFX::fx_render(ProcessOpenGLStruct *pGL)
+{
+    //activate our shader
+    m_shader.BindShader();
+
+	// Texture, uniform uploads
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_1D, mgl_spectrum_texture);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 4096, 0, GL_RGBA, GL_FLOAT, audioTextureData);
+
+	// GUI Updates
+
+	double rgb1[3];
+    //we need to make sure the hue doesn't reach 1.0f, otherwise the result will be pink and not red how it should be
+	double hue1 = (m_Hue1 == 1.0) ? 0.0 : m_Hue1;
+	HSVtoRGB( hue1, m_Saturation, m_Brightness, &rgb1[0], &rgb1[1], &rgb1[2]);
+
+	double rgb2[3];
+	double hue2 = (m_Hue2 == 1.0) ? 0.0 : m_Hue2;
+	HSVtoRGB( hue2, m_Saturation, m_Brightness, &rgb2[0], &rgb2[1], &rgb2[2]);
+
+    
+
+	//Uniforms
+    glUniform3f(m_rgb1Location,
+               rgb1[0], rgb1[1], rgb1[2] );
+    
+    glUniform3f(m_rgb2Location,
+                rgb2[0], rgb2[1], rgb2[2] );
+    
+	glUniform1i(m_spectrum_texture_uniform_location, 0);
+
+    //get the width of the viewport
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport );
+    glUniform1f(m_widthLocation, (float)viewport[2]);
+    
+    glBegin(GL_QUADS);
+	glTexCoord2f(0, 0);
+    glVertex2f(-1,-1);
+	glTexCoord2f(0, 1);
+    glVertex2f(-1,1);
+	glTexCoord2f(1, 1);
+    glVertex2f(1,1);
+	glTexCoord2f(1, 0);
+    glVertex2f(1,-1);
+    glEnd();
+    
+    //unbind the shader
+    m_shader.UnbindShader();
+    
+    return FF_SUCCESS;
+	
+}
+
+float aubioFX::GetFloatParameter(unsigned int index)
+{
+	float retValue = 0.0;
+	
+	switch (index)
+	{
+		case FFPARAM_Hue1:
+			retValue = m_Hue1;
+			break;
+		case FFPARAM_Hue2:
+			retValue = m_Hue2;
+			break;
+		case FFPARAM_Saturation:
+			retValue = m_Saturation;
+			break;
+		case FFPARAM_Brightness:
+			retValue = m_Brightness;
+			break;
+		default:
+			break;
+	}
+	
+	return retValue;
+}
+
+FFResult aubioFX::SetFloatParameter(unsigned int dwIndex, float value)
+{
+	switch (dwIndex)
+	{
+		case FFPARAM_Hue1:
+			m_Hue1 = value;
+			break;
+		case FFPARAM_Hue2:
+			m_Hue2 = value;
+			break;
+		case FFPARAM_Saturation:
+			m_Saturation = value;
+			break;
+		case FFPARAM_Brightness:
+			m_Brightness = value;
+			break;
+		default:
+			return FF_FAIL;
+	}
+	
+	return FF_SUCCESS;
+}
+
+//Jack Calback
+
+jack_port_t *aubioFX_global_input_port;
+jack_port_t *aubioFX_global_output_port;
+fvec_t* aubioFX_global_aubio_sink;
+
+////////////////////////////////////////////////////////////////////
+// AUDIO ///////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
+int jack_frames_process (jack_nframes_t nframes, void *arg)
+{
+
+	
+	aubioFX* plugInstance = (aubioFX*)arg;
+
+	jack_default_audio_sample_t *in, *out;
+	
+	in = (jack_default_audio_sample_t * ) jack_port_get_buffer (plugInstance->m_jack_input_port, nframes);
+
+	//TODO Validate This
+	void* dest = (plugInstance->aubio_buffer)->data;
+
+	memcpy (dest, in,
+		sizeof(jack_default_audio_sample_t) * nframes);
+
+	jack_ringbuffer_write(plugInstance->m_fft_rb, (char*)in, sizeof(jack_default_audio_sample_t) * nframes);
+
+	
+
+	return 0;      
 }
 
 void aubioFX::make_audio_stuff(){
@@ -206,155 +372,4 @@ void  aubioFX::close_audio_stuff(){
 	jack_shutdown(this);
 }
 
-FFResult aubioFX::DeInitGL()
-{
-	//Close audio stuff
-	close_audio_stuff();
 
-    m_shader.FreeGLResources();
-    return FF_SUCCESS;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//  Methods
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void aubioFX::fx_update(){
-	// TODO: Update uniforms
-
-	/*
-	  // Lock fft array
-	  // Send array to shader uniforms
-	*/
-
-}
-
-FFResult aubioFX::ProcessOpenGL(ProcessOpenGLStruct* pGL)
-{
-
-	fx_update();
-
-	return fx_render(pGL);
-}
-
-FFResult aubioFX::fx_render(ProcessOpenGLStruct *pGL)
-{
-	double rgb1[3];
-    //we need to make sure the hue doesn't reach 1.0f, otherwise the result will be pink and not red how it should be
-	double hue1 = (m_Hue1 == 1.0) ? 0.0 : m_Hue1;
-	HSVtoRGB( hue1, m_Saturation, m_Brightness, &rgb1[0], &rgb1[1], &rgb1[2]);
-
-	double rgb2[3];
-	double hue2 = (m_Hue2 == 1.0) ? 0.0 : m_Hue2;
-	HSVtoRGB( hue2, m_Saturation, m_Brightness, &rgb2[0], &rgb2[1], &rgb2[2]);
-
-    //activate our shader
-    m_shader.BindShader();
-    
-    glUniform3f(m_rgb1Location,
-               rgb1[0], rgb1[1], rgb1[2] );
-    
-    glUniform3f(m_rgb2Location,
-                rgb2[0], rgb2[1], rgb2[2] );
-    
-    //get the width of the viewport
-    GLint viewport[4];
-    glGetIntegerv( GL_VIEWPORT, viewport );
-    glUniform1f(m_widthLocation, (float)viewport[2]);
-    
-    glBegin(GL_QUADS);
-    glVertex2f(-1,-1);
-    glVertex2f(-1,1);
-    glVertex2f(1,1);
-    glVertex2f(1,-1);
-    glEnd();
-    
-    //unbind the shader
-    m_shader.UnbindShader();
-    
-    return FF_SUCCESS;
-	
-}
-
-float aubioFX::GetFloatParameter(unsigned int index)
-{
-	float retValue = 0.0;
-	
-	switch (index)
-	{
-		case FFPARAM_Hue1:
-			retValue = m_Hue1;
-			break;
-		case FFPARAM_Hue2:
-			retValue = m_Hue2;
-			break;
-		case FFPARAM_Saturation:
-			retValue = m_Saturation;
-			break;
-		case FFPARAM_Brightness:
-			retValue = m_Brightness;
-			break;
-		default:
-			break;
-	}
-	
-	return retValue;
-}
-
-FFResult aubioFX::SetFloatParameter(unsigned int dwIndex, float value)
-{
-	switch (dwIndex)
-	{
-		case FFPARAM_Hue1:
-			m_Hue1 = value;
-			break;
-		case FFPARAM_Hue2:
-			m_Hue2 = value;
-			break;
-		case FFPARAM_Saturation:
-			m_Saturation = value;
-			break;
-		case FFPARAM_Brightness:
-			m_Brightness = value;
-			break;
-		default:
-			return FF_FAIL;
-	}
-	
-	return FF_SUCCESS;
-}
-
-//Jack Calback
-
-jack_port_t *aubioFX_global_input_port;
-jack_port_t *aubioFX_global_output_port;
-fvec_t* aubioFX_global_aubio_sink;
-
-#ifdef __cplusplus
-//extern "C" {
-int jack_frames_process (jack_nframes_t nframes, void *arg)
-{
-
-	
-	aubioFX* plugInstance = (aubioFX*)arg;
-
-	jack_default_audio_sample_t *in, *out;
-	
-	in = (jack_default_audio_sample_t * ) jack_port_get_buffer (plugInstance->m_jack_input_port, nframes);
-
-	//TODO Validate This
-	void* dest = (plugInstance->aubio_buffer)->data;
-
-	memcpy (dest, in,
-		sizeof(jack_default_audio_sample_t) * nframes);
-
-	jack_ringbuffer_write(plugInstance->m_fft_rb, (char*)in, sizeof(jack_default_audio_sample_t) * nframes);
-
-	
-
-	return 0;      
-}
-//}
-#endif
