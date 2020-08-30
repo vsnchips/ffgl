@@ -12,6 +12,7 @@
 #define FFPARAM_Hue2  (1)
 #define FFPARAM_Saturation  (2)
 #define FFPARAM_Brightness  (3)
+#define FFPARAM_Reset       (4)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +60,8 @@ m_widthLocation(-1)
 	SetParamInfo(FFPARAM_Brightness, "Brightness", FF_TYPE_STANDARD, 1.0f);
 	m_Brightness = 1.0f;
 
-	SetParamInfo(FFPARAM_Brightness, "Reset", FF_TYPE_EVENT, 1.0f);
+	//TODO: Enable This
+	SetParamInfo(FFPARAM_Reset, "Reset", FF_TYPE_EVENT, 1.0f);
 	//m_Brightness = 1.0f;
 
 }
@@ -262,6 +264,9 @@ FFResult aubioFX::SetFloatParameter(unsigned int dwIndex, float value)
 		case FFPARAM_Brightness:
 			m_Brightness = value;
 			break;
+		case FFPARAM_Reset:
+			make_audio_stuff();
+			break;
 		default:
 			return FF_FAIL;
 	}
@@ -324,6 +329,9 @@ int jack_frames_process (jack_nframes_t nframes, void *arg)
 }
 
 void aubioFX::make_audio_stuff(){
+
+	//Mark a setup attempt
+	m_jack_setup = true;
 	
 	printf("Opening Jack Client");
 
@@ -348,6 +356,7 @@ void aubioFX::make_audio_stuff(){
 		if (status & JackServerFailed) {
 			fprintf(stderr, "Unable to connect to JACK server\n");
 			fprintf(stdout, "Unable to connect to JACK server\n");
+			m_jack_setup = false;
 		}
 		return;
 	}
@@ -378,6 +387,7 @@ void aubioFX::make_audio_stuff(){
 
 	if (m_jack_input_port == NULL){
 		fprintf(stderr, "no JACK ports available\n");
+		m_jack_setup = false;
 	}
 
 	//Start the client and connect the ports
@@ -392,6 +402,7 @@ void jack_shutdown(void* arg) {
 	jack_client_close(plugInstance->m_jack_client);
 
 	jack_ringbuffer_free(plugInstance->m_fft_rb);
+
 }
 
 void aubioFX::start_audio_stuff(){
@@ -404,6 +415,7 @@ void aubioFX::start_audio_stuff(){
 		fprintf (stderr, "cannot activate client\n");
 		std::cout << "cannot activate client\n";
 	//	exit (1);
+		m_jack_setup = false;
 		return;
 	}
 
@@ -413,12 +425,16 @@ void aubioFX::start_audio_stuff(){
 	if (ports == NULL) {
 		fprintf(stderr,"no capture ports\n");
 		std::cout << "no capture ports\n";
+		m_jack_setup = false;
+		jack_shutdown(this);
 	}
 	
 	//TODO: Knit Arg
-	if (jack_connect(m_jack_client, ports[0], jack_port_name(m_jack_input_port))){
+	if (jack_connect(m_jack_client, ports[0], jack_port_name(m_jack_input_port))) {
 		fprintf(stderr, "cannot connect input ports\n");
 		std::cout << "cannot connect input ports\n";
+		m_jack_setup = false;
+		jack_shutdown(this);
 	}
 	//free(ports);
 	
@@ -426,6 +442,8 @@ void aubioFX::start_audio_stuff(){
 }
 
 void  aubioFX::close_audio_stuff(){
+	
+
 	jack_shutdown(this);
 }
 
