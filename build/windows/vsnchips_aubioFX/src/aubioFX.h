@@ -72,8 +72,10 @@ public:
 	std::mutex bufferLock;
 	unsigned int latestSample = 0;
 
+	void make_audio_buffers();
 	void make_audio_stuff();
 	void start_audio_stuff();
+	bool m_jack_connect_ports();
 	void close_audio_stuff();
 
 	std::atomic<bool> m_jack_setup = false;
