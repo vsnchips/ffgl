@@ -2,6 +2,7 @@
 #include "FFGL.h"
 #include "FFGLLib.h"
 #include "aubioFX.h"
+#include <iostream>
 
 #include "../../lib/ffgl/utilities/utilities.h"
 
@@ -57,6 +58,9 @@ m_widthLocation(-1)
 
 	SetParamInfo(FFPARAM_Brightness, "Brightness", FF_TYPE_STANDARD, 1.0f);
 	m_Brightness = 1.0f;
+
+	SetParamInfo(FFPARAM_Brightness, "Reset", FF_TYPE_EVENT, 1.0f);
+	//m_Brightness = 1.0f;
 
 }
 
@@ -233,6 +237,8 @@ float aubioFX::GetFloatParameter(unsigned int index)
 		case FFPARAM_Brightness:
 			retValue = m_Brightness;
 			break;
+		case 4:
+			break;
 		default:
 			break;
 	}
@@ -395,7 +401,8 @@ void aubioFX::start_audio_stuff(){
 	 
 	//Start running the jack client
 	if (jack_activate (m_jack_client)) {
-		fprintf (stderr, "cannot activate client");
+		fprintf (stderr, "cannot activate client\n");
+		std::cout << "cannot activate client\n";
 	//	exit (1);
 		return;
 	}
@@ -404,12 +411,14 @@ void aubioFX::start_audio_stuff(){
 	//connect ports
 	ports = jack_get_ports(m_jack_client, NULL,NULL, JackPortIsOutput);
 	if (ports == NULL) {
-		fprintf(stderr,"no physical capture ports\n");
+		fprintf(stderr,"no capture ports\n");
+		std::cout << "no capture ports\n";
 	}
 	
 	//TODO: Knit Arg
 	if (jack_connect(m_jack_client, ports[0], jack_port_name(m_jack_input_port))){
 		fprintf(stderr, "cannot connect input ports\n");
+		std::cout << "cannot connect input ports\n";
 	}
 	//free(ports);
 	

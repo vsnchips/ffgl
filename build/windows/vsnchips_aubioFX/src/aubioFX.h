@@ -92,7 +92,6 @@ public:
 
 	float audioTextureData [4096][4];
 
-
 	//Level 0 TODO:
 	// Update creates audio texturea - developing
 	// Method to upload fft array to texture - done
